@@ -1,0 +1,190 @@
+-- P1
+
+CREATE SCHEMA LibraryManagement;
+
+CREATE TABLE authors (
+author_id INT AUTO_INCREMENT PRIMARY KEY,
+author_name VARCHAR(255)
+);
+
+CREATE TABLE genres (
+genre_id INT AUTO_INCREMENT PRIMARY KEY,
+genre_name VARCHAR(255)
+);
+
+CREATE TABLE books (
+book_id INT AUTO_INCREMENT PRIMARY KEY,
+title VARCHAR(255),
+publication_year YEAR,
+author_id INT,
+genre_id INT,
+FOREIGN KEY (author_id) REFERENCES authors(author_id),
+FOREIGN KEY (genre_id) REFERENCES genres(genre_id)
+);
+
+CREATE TABLE users (
+user_id INT AUTO_INCREMENT PRIMARY KEY,
+username VARCHAR(255),
+email VARCHAR(255)
+);
+
+CREATE TABLE borrowed_books (
+borrow_id INT AUTO_INCREMENT PRIMARY KEY,
+book_id INT,
+user_id INT,
+borrow_date DATE,
+return_date DATE,
+FOREIGN KEY (book_id) REFERENCES books(book_id),
+FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+-- P2
+
+INSERT INTO authors (author_name) VALUES ('George Lucas');
+INSERT INTO authors (author_name) VALUES ('James Cameron');
+INSERT INTO genres (genre_name) VALUES ('Fentesy');
+INSERT INTO genres (genre_name) VALUES ('Action');
+INSERT INTO books (title, publication_year, author_id, genre_id) VALUES ('Star Wars. A New Hope', 1977, 1, 1);
+INSERT INTO books (title, publication_year, author_id, genre_id) VALUES ('The Terminator', 1984, 2, 2);
+INSERT INTO users (username, email) VALUES ('Sarah Connor', 'connor@sky.net');
+INSERT INTO users (username, email) VALUES ('Wookie Chewbacca', 'chui@impery.net');
+INSERT INTO borrowed_books (book_id, user_id, borrow_date, return_date) VALUES (1, 2, '2001-01-01', '2001-03-15');
+INSERT INTO borrowed_books (book_id, user_id, borrow_date, return_date) VALUES (2, 1, '1999-05-20', '1999-06-29');
+
+-- P3
+
+USE mydb;
+
+SELECT 
+o.id as order_id, c.name as customer, e.last_name as employee, 
+p.name as product, od.quantity, cat.name as category, s.name as supplier, 
+sh.name as shipper, o.date 
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+INNER JOIN employees as e ON o.employee_id=e.employee_id
+INNER JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+INNER JOIN categories as cat ON p.category_id=cat.id 
+INNER JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id;
+
+-- P4.1
+
+SELECT 
+COUNT(o.id) as total
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+INNER JOIN employees as e ON o.employee_id=e.employee_id
+INNER JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+INNER JOIN categories as cat ON p.category_id=cat.id 
+INNER JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id;
+
+-- total: 518
+
+SELECT 
+COUNT(o.id) as total
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+INNER JOIN employees as e ON o.employee_id=e.employee_id
+LEFT JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+INNER JOIN categories as cat ON p.category_id=cat.id 
+LEFT JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id;
+
+-- total: 518
+
+SELECT 
+COUNT(o.id)
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+RIGHT JOIN employees as e ON o.employee_id=e.employee_id
+INNER JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+RIGHT JOIN categories as cat ON p.category_id=cat.id 
+INNER JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id;
+
+-- total: 518
+
+Відповідь: кількість не змінилась тому, що RIGHT JOIN бере за основу 
+праву (orders) табличку, тому order.id буде завжди. А LEFT JOIN навідь якщо і створить радки де буде order.id = NULL то COUNT() їх не врахує.
+
+-- P4.2
+
+SELECT 
+o.id as order_id, c.name as customer, e.last_name as employee, 
+p.name as product, od.quantity, cat.name as category, s.name as supplier, 
+sh.name as shipper, o.date 
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+INNER JOIN employees as e ON o.employee_id=e.employee_id
+INNER JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+INNER JOIN categories as cat ON p.category_id=cat.id 
+INNER JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id
+WHERE e.employee_id > 3 AND e.employee_id <= 10;
+
+-- P4.3
+
+SELECT 
+COUNT(o.id) as total, ROUND(AVG(od.quantity),2) as avg, cat.name as category
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+INNER JOIN employees as e ON o.employee_id=e.employee_id
+INNER JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+INNER JOIN categories as cat ON p.category_id=cat.id 
+INNER JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id
+GROUP BY cat.name;
+
+-- P4.4
+
+SELECT 
+COUNT(o.id) as total, ROUND(AVG(od.quantity),2) as avg, cat.name as category
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+INNER JOIN employees as e ON o.employee_id=e.employee_id
+INNER JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+INNER JOIN categories as cat ON p.category_id=cat.id 
+INNER JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id 
+GROUP BY cat.name
+HAVING avg > 1;
+
+-- P4.5
+
+SELECT 
+COUNT(o.id) as total, ROUND(AVG(od.quantity),2) as avg, cat.name as category
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+INNER JOIN employees as e ON o.employee_id=e.employee_id
+INNER JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+INNER JOIN categories as cat ON p.category_id=cat.id 
+INNER JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id 
+GROUP BY cat.name
+HAVING avg > 1
+ORDER BY total DESC;
+
+-- P4.6
+
+SELECT 
+o.id as order_id, c.name as customer, e.last_name as employee, 
+p.name as product, od.quantity, cat.name as category, s.name as supplier, 
+sh.name as shipper, o.date 
+FROM orders as o
+INNER JOIN customers as c ON o.customer_id=c.id 
+INNER JOIN employees as e ON o.employee_id=e.employee_id
+INNER JOIN order_details as od ON od.order_id=o.id
+INNER JOIN products as p ON od.product_id=p.id
+INNER JOIN categories as cat ON p.category_id=cat.id 
+INNER JOIN suppliers as s ON p.supplier_id=s.id 
+INNER JOIN shippers as sh ON o.shipper_id=sh.id
+LIMIT 4 OFFSET 1;
